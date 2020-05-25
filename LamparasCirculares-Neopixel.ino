@@ -21,21 +21,24 @@ const int RGBColorLeds[][3] = {
 const int colorPin[] = {5, 6, 7, 8};
 const int brightnessPin[] = {10, 11};
 const int brightnessIntensity[] = {10, 25, 45, 60, 75, 80, 110, 150, 200, 255};
+const int flashColor[] = {1, 2, 3, 6, 7, 9};
 const int sizeColorPin = sizeof(colorPin) / sizeof(colorPin[0]);
 const int rowsRGBColorLeds = sizeof(RGBColorLeds) / sizeof(RGBColorLeds[0]);
 const int sizeBrightnessIntensity = sizeof(brightnessIntensity) / sizeof(brightnessIntensity[0]);
 
+int i;
 int currentColor = 0;
 int contador;
+int acumulador;
 
 void setup()
 {
   pixels.begin();
-  pixels.setBrightness(brightnessIntensity[sizeBrightnessIntensity - 1]);
+  pixels.setBrightness(128);
 
-  for (int i = 0; i < NUMPIXELS; i++)
+  for (i = 0; i < NUMPIXELS; i++)
   {
-    pixels.setPixelColor(i, pixels.Color(255, 255, 255));
+    pixels.setPixelColor(i, 255, 255, 255);
     pixels.show();
     delay(20);
   }
@@ -43,7 +46,7 @@ void setup()
   pixels.clear();
   pixels.show();
 
-  for (int i = 0; i < sizeColorPin; i++)
+  for (i = 0; i < sizeColorPin; i++)
   {
     pinMode(colorPin[i], INPUT);
   }
@@ -88,39 +91,57 @@ void loop() {
   //COLOR SELECTOR BY PIN
   if (digitalRead(colorPin[0]) == LOW)
   {
-    int acumulador = pow(2, 0);
+    acumulador = pow(2, 0);
     currentColor += acumulador;
     acumulador = 0;
   }
 
   if (digitalRead(colorPin[1]) == LOW)
   {
-    int acumulador = pow(2, 1);
+    acumulador = pow(2, 1);
     currentColor += acumulador;
     acumulador = 0;
   }
 
   if (digitalRead(colorPin[2]) == LOW)
   {
-    int acumulador = pow(2, 2);
+    acumulador = pow(2, 2);
     currentColor += acumulador;
     acumulador = 0;
   }
 
   if (digitalRead(colorPin[3]) == LOW)
   {
-    int acumulador = pow(2, 3);
+    acumulador = pow(2, 3);
     currentColor += acumulador;
     acumulador = 0;
   }
 
-  if (currentColor <= 9)
+  if (currentColor < rowsRGBColorLeds)
   {
-    for (int i = 0; i < NUMPIXELS; i++)
+    for (i = 0; i < NUMPIXELS; i++)
     {
       pixels.setPixelColor(i, RGBColorLeds[currentColor][0], RGBColorLeds[currentColor][1], RGBColorLeds[currentColor][2]);
       pixels.show();
     }
+  }
+  else
+  {
+    currentColor -= rowsRGBColorLeds;
+    currentColor = flashColor[currentColor];
+
+    for (i = 0; i < NUMPIXELS; i++)
+    {
+      pixels.setPixelColor(i, RGBColorLeds[currentColor][0], RGBColorLeds[currentColor][1], RGBColorLeds[currentColor][2]);
+      pixels.show();
+    }
+
+    delay(400);
+
+    pixels.clear();
+    pixels.show();
+
+    delay(400);
   }
 
   currentColor = 0;
