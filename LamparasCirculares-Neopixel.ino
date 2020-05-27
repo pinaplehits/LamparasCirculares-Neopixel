@@ -1,9 +1,13 @@
 #include <Adafruit_NeoPixel.h>
+#include <Bounce2.h>
 
 #define PIN 9
 #define NUMPIXELS 24
 
 Adafruit_NeoPixel pixels(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
+
+Bounce debouncerPin10 = Bounce();
+Bounce debouncerPin11 = Bounce();
 
 const int RGBColorLeds[][3] = {
   {0, 0, 0}, //turn cells off
@@ -25,14 +29,26 @@ const int flashColor[] = {1, 2, 3, 6, 7, 9};
 const int sizeColorPin = sizeof(colorPin) / sizeof(colorPin[0]);
 const int rowsRGBColorLeds = sizeof(RGBColorLeds) / sizeof(RGBColorLeds[0]);
 const int sizeBrightnessIntensity = sizeof(brightnessIntensity) / sizeof(brightnessIntensity[0]);
+const int delayBounce = 5;
+const int delayBrightness = 150;
+const int delayFlash = 400;
 
 int i;
-int currentColor = 0;
+int currentColor;
 int contador;
 int acumulador;
 
 void setup()
 {
+  delay(100);
+  Serial.begin(9600);
+  Serial.println("Anillo LED Adafruit_NeoPixel Version 1.0");
+  Serial.println("El pin 9 es el pin de datos");
+  Serial.println("Selector de colores por pines: 5, 6, 7, 8");
+  Serial.println("Selector de brillo por pines: 10 y 11");
+  Serial.println("9 colores disponibles rojo [PIN 5], verde [PIN 6], azul [PIN 5+6], morado [PIN 7], verde-azul [PIN 5+7], amarillo [PIN 6+7], blanco[PIN 5+6+7], rosa [PIN 8], naranja [PIN 5+8]");
+  Serial.println("6 colores con flash disponibles rojo [PIN 5], verde [PIN 6], azul [PIN 5+6], amarillo [PIN 6+7], blanco[PIN 5+6+7], naranja [PIN 5+8]");
+  
   pixels.begin();
   pixels.setBrightness(128);
 
@@ -46,6 +62,15 @@ void setup()
   pixels.clear();
   pixels.show();
 
+  // Pin 10 and Pin 11 prevents electrical pulse and multiple inputs
+  pinMode(brightnessPin[0], INPUT_PULLUP);
+  debouncerPin10.attach(brightnessPin[0]);
+  debouncerPin10.interval(delayBounce);
+
+  pinMode(brightnessPin[1], INPUT_PULLUP);
+  debouncerPin11.attach(brightnessPin[1]);
+  debouncerPin11.interval(delayBounce);
+
   for (i = 0; i < sizeColorPin; i++)
   {
     pinMode(colorPin[i], INPUT);
@@ -55,6 +80,12 @@ void setup()
 }
 
 void loop() {
+  debouncerPin10.update();
+  debouncerPin11.update();
+
+  int debouncerState10 = debouncerPin10.read();
+  int debouncerState11 = debouncerPin11.read();
+
   //BRIGHTNESS SELECTOR BY PIN
   if (digitalRead(brightnessPin[0]) == LOW)
   {
@@ -62,13 +93,13 @@ void loop() {
     {
       contador = (sizeBrightnessIntensity - 1);
       pixels.setBrightness(brightnessIntensity[contador]);
-      delay(150);
+      delay(delayBrightness);
     }
     else
     {
       contador--;
       pixels.setBrightness(brightnessIntensity[contador]);
-      delay(150);
+      delay(delayBrightness);
     }
   }
 
@@ -78,13 +109,13 @@ void loop() {
     {
       contador++;
       pixels.setBrightness(brightnessIntensity[contador]);
-      delay(150);
+      delay(delayBrightness);
     }
     else
     {
       contador = 0;
       pixels.setBrightness(brightnessIntensity[contador]);
-      delay(150);
+      delay(delayBrightness);
     }
   }
 
@@ -133,15 +164,16 @@ void loop() {
     for (i = 0; i < NUMPIXELS; i++)
     {
       pixels.setPixelColor(i, RGBColorLeds[currentColor][0], RGBColorLeds[currentColor][1], RGBColorLeds[currentColor][2]);
-      pixels.show();
     }
 
-    delay(400);
+    pixels.show();
+
+    delay(delayFlash);
 
     pixels.clear();
     pixels.show();
 
-    delay(400);
+    delay(delayFlash);
   }
 
   currentColor = 0;
